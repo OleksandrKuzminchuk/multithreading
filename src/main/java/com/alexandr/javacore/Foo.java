@@ -1,24 +1,34 @@
 package com.alexandr.javacore;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore;
 
 public class Foo {
-    private Lock lock = new ReentrantLock();
+    private static final Semaphore SECOND = new Semaphore(0);
+    private static final Semaphore THIRD = new Semaphore(0);
 
-    public void first(){
-        lock.lock();
+    public void first() {
         System.out.print("first");
-        lock.unlock();
+        SECOND.release();
     }
-    public void second(){
-        lock.lock();
-        System.out.print("second");
-        lock.unlock();
+
+    public void second() {
+        try {
+            SECOND.acquire();
+            System.out.print("second");
+            THIRD.release();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.out.println("Foo().second(): " + e);
+        }
     }
-    public void third(){
-        lock.lock();
-        System.out.print("third");
-        lock.unlock();
+
+    public void third() {
+        try {
+            THIRD.acquire();
+            System.out.print("third");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.out.println("Foo().third(): " + e);
+        }
     }
 }
